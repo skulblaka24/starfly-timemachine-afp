@@ -30,12 +30,22 @@ Find the name of the disk with:
 $ fdisk -l
 ```
 
-In our case it is --> /dev/sdh1
+In our case it is --> /dev/sda
+
+If the disk is bigger than 3To then you need to attribute a gpt label on it.
+
+```
+$ apt-get install parted
+$ parted /dev/sda
+# print
+# mklabel gpt
+# quit
+```
 
 Then we need to partition it:
 
 ```
-$ fdisk /dev/sdh
+$ fdisk /dev/sda
 ```
 
 Tap `d` to delete all existing partition (Unless you have sensitive datas)
@@ -51,7 +61,7 @@ Then quit.
 Run:
 
 ```
-$ mkfs.ext4 /dev/sdh1
+$ mkfs.ext4 /dev/sda1
 ```
 
 Create the time machine folder:
@@ -63,14 +73,14 @@ $ mkdir /data/time_machine
 Mount it:
 
 ```
-$ mount /dev/sdh1 /data/time_machine
+$ mount /dev/sda1 /data/time_machine
 ```
 
 Add the line in the fstab file:
 
 ```
 $ vim /etc/fstab
-/dev/sdh1        /data/time_machine   ext4 defaults     0       0
+/dev/sda1        /data/time_machine   ext4 defaults     0       0
 ```
 
 /!\ Carefull ! If you remove the disk and then reboot. Make sure you've removed the line in the fstab file or the starting process will get stuck.
@@ -93,7 +103,7 @@ Add after set -e:
 
 ```
 # USERNAME PASSWORD VOL_NAME VOL_ROOT [VOL_SIZE_MB]
-add-account gauth Skulblaka24 Time_Machine_Gauth /timemachine/gauth 2000000
+add-account gauth Skulblaka24 Time_Machine_Gauth /timemachine/gauth 3000000
 ```
 
 Build the container:
