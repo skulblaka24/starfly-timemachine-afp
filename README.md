@@ -92,7 +92,7 @@ $ vim ./entrypoint.sh
 Add after set -e:
 
 ```
-\# USERNAME PASSWORD VOL_NAME VOL_ROOT [VOL_SIZE_MB]
+# USERNAME PASSWORD VOL_NAME VOL_ROOT [VOL_SIZE_MB]
 add-account gauth Skulblaka24 Time_Machine_Gauth /timemachine/gauth 2000000
 ```
 
@@ -259,4 +259,3 @@ $ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /e
 #### Why do I need to install Avahi on your host and not in the container?
 
 Because if you don't do it this way, the discovery message won't be able to reach your computers.
-
