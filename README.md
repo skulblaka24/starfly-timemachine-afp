@@ -1,36 +1,121 @@
-# docker-timemachine
+# Starfly Time Machine
 A docker container to compile the lastest version of Netatalk in order to run a Time Machine server.
 
 ## Running on ARM / RPi
 If you want to use this on an ARM-Device (like the Raspberry Pi), you have two options:
 
 - Get the precompiled image (latest compilation on 29-03-2018):
+
     ```
     $ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /external_volume:/timemachine -it -p 548:548 -p 636:636 odarriba/timemachine-rpi
     ```
 - Build the image directly on your device:
+
     ```
     $ docker build -t timemachine-rpi:latest -f Dockerfile .
     $ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /external_volume:/timemachine -it -p 548:548 -p 636:636 timemachine-rpi
     ```
 
-## Installation
+And have a look at the github of https://github.com/odarriba/docker-timemachine.git.
 
-### Step 1 - Start the Server
+## Running on x86
+### Installation
+
+### Step 1 - Prepare the environment (With full drive for time machine)
+
+Plug the disk.
+Find the name of the disk with:
+
+```
+$ fdisk -l
+```
+
+In our case it is --> /dev/sdh1
+
+Then we need to partition it:
+
+```
+$ fdisk /dev/sdh
+```
+
+Tap `d` to delete all existing partition (Unless you have sensitive datas)
+
+Tap `p` to make sure there is not left.
+
+Tap `n` to create a new one. Use default values.
+
+Tap `w` to write the changes.
+
+Then quit.
+
+Run:
+
+```
+$ mkfs.ext4 /dev/sdh1
+```
+
+Create the time machine folder:
+
+```
+$ mkdir /data/time_machine
+```
+
+Mount it:
+
+```
+$ mount /dev/sdh1 /data/time_machine
+```
+
+Add the line in the fstab file:
+
+```
+$ vim /etc/fstab
+/dev/sdh1        /data/time_machine   ext4 defaults     0       0
+```
+
+/!\ Carefull ! If you remove the disk and then reboot. Make sure you've removed the line in the fstab file or the starting process will get stuck.
+
+### Step 2 - Build the container on x86 system
+
+Download the git repo:
+
+```
+$ git clone https://github.com/skulblaka24/docker-timemachine.git
+```
+
+Modify the entrypoint to add the creating user lines:
+
+```
+$ vim ./entrypoint.sh
+```
+
+Add after set -e:
+
+```
+\# USERNAME PASSWORD VOL_NAME VOL_ROOT [VOL_SIZE_MB]
+add-account gauth Skulblaka24 Time_Machine_Gauth /timemachine/gauth 2000000
+```
+
+Build the container:
+
+```
+$ docker build -t skulblaka/timemachine:latest -f Dockerfile .
+```
+
+### Step 3 - Start the Server
 
 To download the docker container and execute it, simply run:
 
 ```
-$ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /external_volume:/timemachine -it -p 548:548 -p 636:636 --ulimit nofile=65536:65536 odarriba/timemachine
+$ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /external_volume:/timemachine -it -p 548:548 -p 636:636 --ulimit nofile=65536:65536 skulblaka/timemachine
 ```
 
 Replace `external_volume` with a local path where you want to store your data.
+In our case: `/data/time_machine:/timemachine`
 
 As the image has been started using the `--restart=always` flag, it will start when the computers boots up.
 
-
-
-### Step 2 - Add a User
+### Step 4 - Add a User (Optional)
 
 To add a user, run:
 
@@ -51,8 +136,9 @@ But take care that:
 
 Now you have a docker instance running `netatalk`.
 
+If you want to make it permanent redo the Step 2 and duplicate/change the line in the entrypoint file.
 
-### Step 3 - Enable Auto Discovery
+### Step 5 - Enable Auto Discovery
 
 Avahi daemon is commonly used to help your computers to find the services provided by a server.
 
@@ -62,11 +148,18 @@ Avahi isn't built into this Docker image because, due to Docker's networking lim
 
 * Install `avahi-daemon`: run `sudo apt-get install avahi-daemon avahi-utils`
 * Copy the file from `avahi/nsswitch.conf` to `/etc/nsswitch.conf`
+```
+$ cp avahi/nsswitch.conf /etc/nsswitch.conf
+```
+
 * Copy the service description file from `avahi/afpd.service` to `/etc/avahi/services/afpd.service`
+```
+$ cp avahi/afpd.service /etc/avahi/services/afpd.service
+```
+
 * Restart Avahi's daemon: `sudo /etc/init.d/avahi-daemon restart`
 
-
-### Step 4 - Configure Your Firewall
+### Step 6 - Configure Your Firewall
 
 Make sure
 
@@ -74,9 +167,14 @@ Make sure
 
 * your Mac allows outgoing connections (Little Snitch?)
 
+Commands:
+```
+$ firewall-cmd --permanent --add-port=548/tcp && firewall-cmd --permanent --add-port=636/tcp
+$ firewall-cmd --permanent --add-port=548/udp && firewall-cmd --permanent --add-port=636/udp
+$ firewall-cmd --reload
+```
 
-
-### Step 5 - Start Using It
+### Step 7 - Start Using It
 
 To start using it, follow these steps:
 
@@ -94,6 +192,9 @@ To start using it, follow these steps:
 In the example below, the Docker instance is running on server `central`. For `USERNAME` the account `Backup` along with a `PASSWORD` was created. Once connected, the account `Backup` is available in Time Machine settings:
 ![alt text](docs/overview.jpg "Getting Started")
 
+### Step 8 - Time Machine
+
+Simply add the mounted disk in timemachine.
 
 ## Advanced Usage
 
@@ -159,10 +260,3 @@ $ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /e
 
 Because if you don't do it this way, the discovery message won't be able to reach your computers.
 
-
-
-## Contributors
-
-* Óscar de Arriba (odarriba@gmail.com)
-* Daniel Iñigo (demil133@gmail.com)
-* Josef Friedrich ([@Josef-Friedrich](https://github.com/Josef-Friedrich))
