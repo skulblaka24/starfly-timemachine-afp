@@ -32,7 +32,7 @@ $ fdisk -l
 
 In our case it is --> /dev/sda
 
-If the disk is bigger than 3To then you need to attribute a gpt label on it.
+If the disk is bigger than 2To then you need to attribute a gpt label on it.
 
 ```
 $ apt-get install parted
