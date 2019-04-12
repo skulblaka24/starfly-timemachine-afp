@@ -99,7 +99,7 @@ Modify the entrypoint to add the creating user lines:
 $ vim ./entrypoint.sh
 ```
 
-Add after set -e:
+Add after # User are to be added here
 
 ```
 # USERNAME PASSWORD VOL_NAME VOL_ROOT [VOL_SIZE_MB]
@@ -125,7 +125,7 @@ In our case: `/data/time_machine:/timemachine`
 
 As the image has been started using the `--restart=always` flag, it will start when the computers boots up.
 
-### Step 4 - Add a User (Optional)
+### Step 4 - Add a User (Optional if entrypoint is configured)
 
 To add a user, run:
 
@@ -269,3 +269,9 @@ $ docker run -h timemachine --name timemachine --restart=unless-stopped -d -v /e
 #### Why do I need to install Avahi on your host and not in the container?
 
 Because if you don't do it this way, the discovery message won't be able to reach your computers.
+
+## Notes
+
+Users configuration are in /etc/afpd.conf
+
+If /.initialized_user file is created the entrypoint stops adding the users again and again.
