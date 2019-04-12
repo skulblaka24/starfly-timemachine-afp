@@ -125,6 +125,22 @@ In our case: `/data/time_machine:/timemachine`
 
 As the image has been started using the `--restart=always` flag, it will start when the computers boots up.
 
+or use docker-compose:
+version: '2'
+services:
+  timemachine:
+    restart: always
+    image: skulblaka/timemachine:latest #x86_v2
+    ports:
+      - "548:548"
+      - "636:636"
+    volumes:
+      - "/data/time_machine:/timemachine"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
 ### Step 4 - Add a User (Optional if entrypoint is configured)
 
 To add a user, run:
